@@ -39,7 +39,6 @@ private:
     vec2 forward; // 相机方向
     vec2 position; // 相机位置
     double planeX = 0, planeY = 0.66; //相机平面法向量
-    
 };
 
 void Camera::Show(Screen &screen) {

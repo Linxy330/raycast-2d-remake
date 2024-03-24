@@ -157,5 +157,4 @@ void Screen::Setup() {
     //移动窗口Y
     MoveWindow(console, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), TRUE);
     //隐藏光标
-
 }

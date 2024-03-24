@@ -8,7 +8,6 @@
 #include "include/camera.h"
 #include "include/vec2.h"
 
-
 //place the example code below here:
 
 #define mapWidth 24
