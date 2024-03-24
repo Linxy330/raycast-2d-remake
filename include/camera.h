@@ -27,7 +27,7 @@ public:
     void setDirection(float dx, float dy) { this->forward = vec2(dx, dy); }
     void Show(Screen &screen); // 将相机内容打印到屏幕
     void up(); // 前进
-    void donw(); // 后退
+    void down(); // 后退
     void left(); // 左转
     void right(); // 右转
     
@@ -158,7 +158,7 @@ void Camera::up() {
     this->position.y += this->forward.y * moveSpeed;
 }
 
-void Camera::donw() {
+void Camera::down() {
     if(worldMap[int(this->position.x - this->forward.x * moveSpeed)][int(this->position.y)] == false) 
         this->position.x -= this->forward.x * moveSpeed;
     if(worldMap[int(this->position.x)][int(this->position.y - this->forward.y * moveSpeed)] == false) 

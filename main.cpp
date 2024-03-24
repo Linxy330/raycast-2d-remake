@@ -1,13 +1,12 @@
 #include <cmath>
 #include <string>
-#include<ctime>
+#include <ctime>
 #include <iostream>
 #include <conio.h>
 
 #include "include/screen.h"
 #include "include/camera.h"
 #include "include/vec2.h"
-#include "include/worldMap.h"
 
 
 //place the example code below here:
@@ -48,8 +47,9 @@ int main(int /*argc*/, char */*argv*/[])
   Camera camera;
   Screen screen;
 
-  while(1) {
-    if(kbhit())
+  while(1)
+  {
+    if(kbhit())//detect keyboard
     {
       int ch = getch();
       switch(ch)
@@ -58,14 +58,14 @@ int main(int /*argc*/, char */*argv*/[])
           camera.right();
           break;
         case 's':
-            camera.donw();
-            break;
+          camera.down();
+          break;
         case 'a':
-            camera.left();
-            break;
+          camera.left();
+          break;
         case 'w':
-            camera.up();
-            break;
+          camera.up();
+          break;
       }
       
     }
