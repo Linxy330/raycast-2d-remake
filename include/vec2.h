@@ -1,3 +1,5 @@
+//This file is to store the <x,y> info and implement vector operations
+
 #pragma once
 #include <cmath>
 
@@ -54,30 +56,35 @@ struct vec2
 	{
 		x += v.x;
 		y += v.y;
+		return *this;
 	}
 	
 	vec2& operator -= (const vec2& v)
 	{
 		x -= v.x;
 		y -= v.y;
+		return *this;
 	}
 	
 	vec2& operator *= (double k)
 	{
 		x *= k;
 		y *= k;
+		return *this;
 	}
 	
 	vec2& operator /= (double k)
 	{
 		x /= k;
 		y /= k;
+		return *this;
 	}
 	
 	vec2 operator - ()
 	{
 		x=-x;
 		y=-y;
+		return *this;
 	}
 	
 	double magnitute2() const
@@ -94,6 +101,7 @@ struct vec2
 	{
 		double mag=magnitute();
 		(*this)/=mag;
+		return *this;
 	}
 
 	vec2 normalized()
