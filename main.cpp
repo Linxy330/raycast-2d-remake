@@ -61,7 +61,7 @@ int main() {
 //        }
 
         // 使用 GetAsyncKeyState 来检测按键状态
-        // 0x8000表示按键被按下
+        // 0x8000表示按键被按下(掩码)
         if (GetAsyncKeyState('D') & 0x8000) {
             camera.right();
         }
