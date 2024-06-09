@@ -39,7 +39,6 @@ int main() {
     Screen screen;
 
     while (1) {
-
 //        if(kbhit())//detect keyboard
 //        {
 //            int ch = getch();
