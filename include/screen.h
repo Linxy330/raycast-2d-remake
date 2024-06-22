@@ -2,26 +2,7 @@
 
 #include<windows.h>
 #include<iostream>
-
-// //双缓冲
-// int active = 0;
-// COORD coord = {0,0};
-// DWORD bytes = 0;
-// //创建新的控制台缓冲区
-// HANDLE buf0 = CreateConsoleScreenBuffer(
-//     GENERIC_WRITE,//定义进程可以往缓冲区写数据
-//     FILE_SHARE_WRITE,//定义缓冲区可共享写权限
-//     NULL,
-//     CONSOLE_TEXTMODE_BUFFER,
-//     NULL
-// );
-// HANDLE buf1 = CreateConsoleScreenBuffer(
-//     GENERIC_WRITE,//定义进程可以往缓冲区写数据
-//     FILE_SHARE_WRITE,//定义缓冲区可共享写权限
-//     NULL,
-//     CONSOLE_TEXTMODE_BUFFER,
-//     NULL
-// );
+#include"color.h"
 
 constexpr int dW = 9, dH = 9; // 字体大小
 
@@ -29,6 +10,12 @@ constexpr int dW = 9, dH = 9; // 字体大小
 int WIDTH = (GetSystemMetrics(SM_CXSCREEN) - dW) / dW + 1;
 int HEIGHT = (GetSystemMetrics(SM_CYSCREEN) - dH) / dH;
 
+struct CHAR_INFO_BUFFER {
+    CHAR_INFO *buffer;
+    COORD size;
+    COORD coord;
+    SMALL_RECT rect;
+};
 
 class Screen {
 public:
@@ -36,6 +23,7 @@ public:
     Screen() {
         Setup();
         Clear();
+        initCharInfoBuffer();
     }
 
     //画布清除
@@ -80,28 +68,35 @@ public:
 
     //将画布渲染至屏幕
     void Show() {
-        char *frame = new char[WIDTH * HEIGHT];
-        for (int i = 0; i < HEIGHT - 1; i++) {
-            frame[WIDTH * i + WIDTH - 1] = '\n';//除了最后一行填充换行符
-        }
-        frame[WIDTH * HEIGHT - 1] = '\0';//字符串末尾
-
-        //将画布与边界投影到frame上
+        // 染色+字符
         for (int i = 0; i < HEIGHT; i++) {
             for (int j = 0; j < WIDTH - 1; j++) {
-                frame[i * WIDTH + j] = brightness(canvas[WIDTH * i + j]);
+                charInfoBuffer.buffer[i * WIDTH + j].Char.AsciiChar = brightness(canvas[WIDTH * i + j]);
+                charInfoBuffer.buffer[i * WIDTH + j].Attributes = getColor(canvas[WIDTH * i + j]);
             }
         }
+
+        // 为每一行的开头和结尾添加边界字符 '@'
         for (int i = 0; i < HEIGHT; ++i) {
-            frame[WIDTH * i] = '@';
-            frame[WIDTH * i + WIDTH - 2] = '@';
+            charInfoBuffer.buffer[WIDTH * i].Char.AsciiChar = '@';
+            charInfoBuffer.buffer[WIDTH * i].Attributes = WHITE;
+            charInfoBuffer.buffer[WIDTH * i + WIDTH - 2].Char.AsciiChar = '@';
+            charInfoBuffer.buffer[WIDTH * i + WIDTH - 2].Attributes = WHITE;
         }
+
+        // 为第一行和最后一行添加边界字符 '@'
         for (int j = 0; j < WIDTH - 1; ++j) {
-            frame[j] = '@';
-            frame[WIDTH * (HEIGHT - 1) + j] = '@';
+            charInfoBuffer.buffer[j].Char.AsciiChar = '@';
+            charInfoBuffer.buffer[j].Attributes = WHITE;
+            charInfoBuffer.buffer[WIDTH * (HEIGHT - 1) + j].Char.AsciiChar = '@';
+            charInfoBuffer.buffer[WIDTH * (HEIGHT - 1) + j].Attributes = WHITE;
         }
-        FillScreenWithString(frame);
-        delete[] frame;
+
+        COORD bufferSize = {(SHORT) WIDTH, (SHORT) HEIGHT};
+        COORD bufferCoord = {0, 0};
+        SMALL_RECT writeRegion = {0, 0, (SHORT) (WIDTH - 1), (SHORT) (HEIGHT - 1)};
+        WriteConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), charInfoBuffer.buffer, bufferSize, bufferCoord,
+                           &writeRegion);
     }
 
     int Height() {
@@ -114,32 +109,34 @@ public:
 
     ~Screen() {
         delete[] canvas;
+        delete[] charInfoBuffer.buffer;
     }
 
 private:
     byte *canvas = new byte[WIDTH * HEIGHT];
+    CHAR_INFO_BUFFER charInfoBuffer;
 
     void Setup();
 
-    void FillScreenWithString(const char *frame);
+    void initCharInfoBuffer() {
+        charInfoBuffer.size = {(SHORT) WIDTH, (SHORT) HEIGHT};
+        charInfoBuffer.coord = {0, 0};
+        charInfoBuffer.rect = {0, 0, (SHORT) (WIDTH - 1), (SHORT) (HEIGHT - 1)};
+        charInfoBuffer.buffer = new CHAR_INFO[WIDTH * HEIGHT];
+    }
 
     char brightness(byte n) {
         char s[] = " .,^:-+abcdwf$&%#@";
         return s[n * 18 / 256];
     }
+
+    // 根据亮度值设置颜色
+    int getColor(byte luminuns) {
+        if (luminuns == 255)return 4; // 亮面
+        else if (luminuns == 15)return 1;// 地面
+        else return luminuns % 16; // 暗面
+    }
 };
-
-//每次输出都会覆盖旧输出
-void Screen::FillScreenWithString(const char *frame) {
-    // 创建一个 COORD 结构体，表示控制台光标的位置，{0, 0} 表示将光标移动到控制台的左上角
-    COORD coord = {0, 0};
-
-    // 使用 SetConsoleCursorPosition 函数将控制台光标移动到 coord 指定的位置
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-
-    // 使用 fputs 函数将 frame 指向的字符串写入标准输出（控制台）
-    fputs(frame, stdout);
-}
 
 void Screen::Setup() {
     // 获取标准输出的句柄
@@ -147,7 +144,6 @@ void Screen::Setup() {
 
     //全屏
     SetConsoleDisplayMode(hConsole, CONSOLE_FULLSCREEN_MODE, nullptr);
-
 
     // 设置字体大小
     CONSOLE_FONT_INFOEX cf = {0};
@@ -175,5 +171,4 @@ void Screen::Setup() {
     SetConsoleDisplayMode(hstdout, CONSOLE_FULLSCREEN_MODE, 0);
     //移动窗口Y
     MoveWindow(console, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), TRUE);
-    //隐藏光标
 }
