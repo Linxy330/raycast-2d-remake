@@ -1,8 +1,8 @@
 #pragma once
 
-#include<windows.h>
-#include<iostream>
-#include"color.h"
+#include <windows.h>
+#include <iostream>
+#include "color.h"
 
 constexpr int dW = 9, dH = 9; // 字体大小
 
@@ -11,10 +11,10 @@ int WIDTH = (GetSystemMetrics(SM_CXSCREEN) - dW) / dW + 1;
 int HEIGHT = (GetSystemMetrics(SM_CYSCREEN) - dH) / dH;
 
 struct CHAR_INFO_BUFFER {
-    CHAR_INFO *buffer;
-    COORD size;
-    COORD coord;
-    SMALL_RECT rect;
+    CHAR_INFO *buffer;//包含一个字符和其属性（颜色等）
+    COORD size;//有两个short类型，表示字符缓冲区的尺寸（宽度和高度）
+    COORD coord;//表示缓冲区的坐标
+    SMALL_RECT rect;//包含四个short类型，表示矩形区域的边界。
 };
 
 class Screen {
@@ -37,23 +37,24 @@ public:
     }
 
     //画点
-    void DrawPoint(int x, int y, byte luminuns) { //(x,y)处亮度为luminuns的点
+    void DrawPoint(int x, int y, byte brightness) { //(x,y)处亮度为brightness的点
         if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) {
             return;
         } else {
-            canvas[y * WIDTH + x] = luminuns;
+            canvas[y * WIDTH + x] = brightness;
         }
     }
 
     //画线 bresenham
-    void DrawLine(int x0, int y0, int x1, int y1, byte luminuns) {
+    void DrawLine(int x0, int y0, int x1, int y1, byte brightness, int color) {
         if (x0 < 0 || y0 < 0 || x0 >= WIDTH || y0 >= HEIGHT) return;
         if (x1 < 0 || y1 < 0 || x1 >= WIDTH || y1 >= HEIGHT) return;
         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
         int erro = (dx > dy ? dx : -dy) / 2;
-
-        while (canvas[y0 * WIDTH + x0] = luminuns, x0 != x1 || y0 != y1) {
+        //亮度+染色
+        while (canvas[y0 * WIDTH + x0] = brightness, charInfoBuffer.buffer[y0 * WIDTH + x0].Attributes = color,
+                x0 != x1 || y0 != y1) {
             int e2 = erro;
             if (e2 > -dx) {
                 erro -= dy;
@@ -68,15 +69,16 @@ public:
 
     //将画布渲染至屏幕
     void Show() {
-        // 染色+字符
         for (int i = 0; i < HEIGHT; i++) {
             for (int j = 0; j < WIDTH - 1; j++) {
+                //字符输出
                 charInfoBuffer.buffer[i * WIDTH + j].Char.AsciiChar = brightness(canvas[WIDTH * i + j]);
-                charInfoBuffer.buffer[i * WIDTH + j].Attributes = getColor(canvas[WIDTH * i + j]);
+                //地面颜色
+                if (canvas[WIDTH * i + j] == 15)charInfoBuffer.buffer[i * WIDTH + j].Attributes = YELLOW;
             }
         }
 
-        // 为每一行的开头和结尾添加边界字符 '@'
+        //为每一行的开头和结尾添加边界字符 '@'
         for (int i = 0; i < HEIGHT; ++i) {
             charInfoBuffer.buffer[WIDTH * i].Char.AsciiChar = '@';
             charInfoBuffer.buffer[WIDTH * i].Attributes = WHITE;
@@ -84,7 +86,7 @@ public:
             charInfoBuffer.buffer[WIDTH * i + WIDTH - 2].Attributes = WHITE;
         }
 
-        // 为第一行和最后一行添加边界字符 '@'
+        //为第一行和最后一行添加边界字符 '@'
         for (int j = 0; j < WIDTH - 1; ++j) {
             charInfoBuffer.buffer[j].Char.AsciiChar = '@';
             charInfoBuffer.buffer[j].Attributes = WHITE;
@@ -92,9 +94,9 @@ public:
             charInfoBuffer.buffer[WIDTH * (HEIGHT - 1) + j].Attributes = WHITE;
         }
 
-        COORD bufferSize = {(SHORT) WIDTH, (SHORT) HEIGHT};
+        COORD bufferSize = {(short) WIDTH, (short) HEIGHT};
         COORD bufferCoord = {0, 0};
-        SMALL_RECT writeRegion = {0, 0, (SHORT) (WIDTH - 1), (SHORT) (HEIGHT - 1)};
+        SMALL_RECT writeRegion = {0, 0, (short) (WIDTH - 1), (short) (HEIGHT - 1)};
         WriteConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), charInfoBuffer.buffer, bufferSize, bufferCoord,
                            &writeRegion);
     }
@@ -119,22 +121,19 @@ private:
     void Setup();
 
     void initCharInfoBuffer() {
-        charInfoBuffer.size = {(SHORT) WIDTH, (SHORT) HEIGHT};
+        charInfoBuffer.size = {(short) WIDTH, (short) HEIGHT};
         charInfoBuffer.coord = {0, 0};
-        charInfoBuffer.rect = {0, 0, (SHORT) (WIDTH - 1), (SHORT) (HEIGHT - 1)};
+        charInfoBuffer.rect = {0, 0, (short) (WIDTH - 1), (short) (HEIGHT - 1)};
         charInfoBuffer.buffer = new CHAR_INFO[WIDTH * HEIGHT];
+        for (int i = 0; i < WIDTH * HEIGHT; ++i) {
+            charInfoBuffer.buffer[i].Char.AsciiChar = ' ';
+            charInfoBuffer.buffer[i].Attributes = 0;
+        }
     }
 
     char brightness(byte n) {
         char s[] = " .,^:-+abcdwf$&%#@";
         return s[n * 18 / 256];
-    }
-
-    // 根据亮度值设置颜色
-    int getColor(byte luminuns) {
-        if (luminuns == 255)return 4; // 亮面
-        else if (luminuns == 15)return 1;// 地面
-        else return luminuns % 16; // 暗面
     }
 };
 
