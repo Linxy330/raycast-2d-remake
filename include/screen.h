@@ -1,4 +1,5 @@
 #pragma once
+
 #include<windows.h>
 #include<iostream>
 
@@ -29,97 +30,108 @@ int WIDTH = (GetSystemMetrics(SM_CXSCREEN) - dW) / dW + 1;
 int HEIGHT = (GetSystemMetrics(SM_CYSCREEN) - dH) / dH;
 
 class Screen {
-    public:
+public:
 
-        Screen() {
-            Setup();
-            Clear();
-        }
-        //画布清除
-        void Clear() {
-            for(int i = 0; i < HEIGHT; i++) {
-                for(int j = 0; j < WIDTH; j++) {
-                    if(i >= HEIGHT/2) canvas[i * WIDTH + j] = 15;
-                    else canvas[i * WIDTH + j] = 0;
-                }
+    Screen() {
+        Setup();
+        Clear();
+    }
+
+    //画布清除
+    void Clear() {
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                if (i >= HEIGHT / 2) canvas[i * WIDTH + j] = 15;
+                else canvas[i * WIDTH + j] = 0;
             }
         }
-        //画点
-        void DrawPoint(int x, int y, byte luminuns) { //(x,y)处亮度为luminuns的点
-            if(x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) {
-                return;
-            }else{
-                canvas[y * WIDTH + x] = luminuns;
+    }
+
+    //画点
+    void DrawPoint(int x, int y, byte luminuns) { //(x,y)处亮度为luminuns的点
+        if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) {
+            return;
+        } else {
+            canvas[y * WIDTH + x] = luminuns;
+        }
+    }
+
+    //画线 bresenham
+    void DrawLine(int x0, int y0, int x1, int y1, byte luminuns) {
+        if (x0 < 0 || y0 < 0 || x0 >= WIDTH || y0 >= HEIGHT) return;
+        if (x1 < 0 || y1 < 0 || x1 >= WIDTH || y1 >= HEIGHT) return;
+        int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int erro = (dx > dy ? dx : -dy) / 2;
+
+        while (canvas[y0 * WIDTH + x0] = luminuns, x0 != x1 || y0 != y1) {
+            int e2 = erro;
+            if (e2 > -dx) {
+                erro -= dy;
+                x0 += sx;
+            }
+            if (e2 < dy) {
+                erro += dx;
+                y0 += sy;
             }
         }
-        //画线 bresenham
-        void DrawLine(int x0, int y0, int x1, int y1, byte luminuns) {
-            if(x0 < 0 || y0 < 0 || x0 >= WIDTH || y0 >= HEIGHT) return;
-            if(x1 < 0 || y1 < 0 || x1 >= WIDTH || y1 >= HEIGHT) return;
-            int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-            int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-            int erro = (dx > dy ? dx : -dy) / 2;
-        
-            while(canvas[y0 * WIDTH + x0] = luminuns, x0 != x1 || y0 != y1){
-                int e2 = erro;
-                if(e2 > -dx) { erro -= dy; x0 += sx;}
-                if(e2 <  dy) { erro += dx; y0 += sy;}
+    }
+
+    //将画布渲染至屏幕
+    void Show() {
+        char *frame = new char[WIDTH * HEIGHT];
+        for (int i = 0; i < HEIGHT - 1; i++) {
+            frame[WIDTH * i + WIDTH - 1] = '\n';//除了最后一行填充换行符
+        }
+        frame[WIDTH * HEIGHT - 1] = '\0';//字符串末尾
+
+        //将画布与边界投影到frame上
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH - 1; j++) {
+                frame[i * WIDTH + j] = brightness(canvas[WIDTH * i + j]);
             }
         }
-        //将画布渲染至屏幕
-        void Show() {
-            char* frame=new char[WIDTH*HEIGHT];
-            for(int i = 0; i < HEIGHT - 1; i++) {
-                frame[WIDTH * i + WIDTH - 1] = '\n';//除了最后一行填充换行符
-            }
-            frame[WIDTH * HEIGHT - 1] = '\0';//字符串末尾
-
-            //将画布与边界投影到frame上
-            for(int i = 0; i < HEIGHT; i++) {
-                for(int j = 0; j < WIDTH-1; j++) {
-                    frame[i * WIDTH + j] = brightness(canvas[WIDTH*i+j]);
-                }
-            }
-            for (int i = 0; i < HEIGHT; ++i) {
-                frame[WIDTH * i] = '@';
-                frame[WIDTH * i + WIDTH - 2] = '@';
-            }
-            for (int j = 0; j < WIDTH-1; ++j) {
-                frame[j] = '@';
-                frame[WIDTH*(HEIGHT-1)+j] = '@';
-            }
-            FillScreenWithString(frame);
-            delete[] frame;
+        for (int i = 0; i < HEIGHT; ++i) {
+            frame[WIDTH * i] = '@';
+            frame[WIDTH * i + WIDTH - 2] = '@';
         }
-
-        int Height() {
-            return HEIGHT;
+        for (int j = 0; j < WIDTH - 1; ++j) {
+            frame[j] = '@';
+            frame[WIDTH * (HEIGHT - 1) + j] = '@';
         }
+        FillScreenWithString(frame);
+        delete[] frame;
+    }
 
-        int Width() {
-            return WIDTH;
-        }
+    int Height() {
+        return HEIGHT;
+    }
 
-        ~Screen() {
-            delete[] canvas;
-        }
-    private:
-        byte *canvas = new byte[WIDTH * HEIGHT];
+    int Width() {
+        return WIDTH;
+    }
 
-        void Setup();
+    ~Screen() {
+        delete[] canvas;
+    }
 
-        void FillScreenWithString(const char *frame);
+private:
+    byte *canvas = new byte[WIDTH * HEIGHT];
 
-        char brightness(byte n) {
-            char s[] = " .,^:-+abcdwf$&%#@";
-            return s[n*18/256];
-        }
+    void Setup();
+
+    void FillScreenWithString(const char *frame);
+
+    char brightness(byte n) {
+        char s[] = " .,^:-+abcdwf$&%#@";
+        return s[n * 18 / 256];
+    }
 };
 
 void Screen::FillScreenWithString(const char *frame) {
     COORD coord = {0, 0};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-    fputs(frame,stdout);
+    fputs(frame, stdout);
 }
 
 void Screen::Setup() {
@@ -128,7 +140,7 @@ void Screen::Setup() {
 
     //全屏
     SetConsoleDisplayMode(hConsole, CONSOLE_FULLSCREEN_MODE, nullptr);
-    
+
 
     // 设置字体大小
     CONSOLE_FONT_INFOEX cf = {0};
