@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vec2.h"
-#include "Screen.h"
+#include "screen.h"
 #include "worldMap.h"
 
 //perspective camera
@@ -10,7 +10,7 @@ class Camera {
 public:
 
     double moveSpeed = 0.007; //移动速度
-    double rotSpeed = 0.003; //旋转速度
+    double rotSpeed = 0.0025; //旋转速度
 
     Camera() {
         this->position = vec2(22, 12);
@@ -122,23 +122,32 @@ void Camera::Show(Screen &screen) {
         int drawEnd = lineHeight / 2 + HEIGHT / 2;
         if (drawEnd >= HEIGHT) drawEnd = HEIGHT - 1;
 
-        // //墙体颜色
-        // ColorRGB color;
-        // switch(worldMap[mapX][mapY])
-        // {
-        //   case 1:  color = RGB_Red;    break; //red
-        //   case 2:  color = RGB_Green;  break; //green
-        //   case 3:  color = RGB_Blue;   break; //blue
-        //   case 4:  color = RGB_White;  break; //white
-        //   default: color = RGB_Yellow; break; //yellow
-        // }
+        //墙体颜色
+        int color;
+        switch (worldMap[mapX][mapY]) {
+            case 1:
+                color = RED;
+                break; //red
+            case 2:
+                color = GREEN;
+                break; //green
+            case 3:
+                color = BLUE;
+                break; //blue
+            case 4:
+                color = WHITE;
+                break; //white
+            default:
+                color = YELLOW;
+                break; //yellow
+        }
 
         //give x and y sides different brightness
-        int color = 255;
-        if (side == 1) { color = 98; }
+        int brightness = 255;
+        if (side == 1) { brightness = 98; }
 
         //draw the pixels of the stripe as a vertical line
-        screen.DrawLine(x, drawStart, x, drawEnd, color);
+        screen.DrawLine(x, drawStart, x, drawEnd, brightness, color);
     }
 }
 
