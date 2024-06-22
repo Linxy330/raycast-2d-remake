@@ -2,6 +2,7 @@
 
 #include "include/screen.h"
 #include "include/camera.h"
+#include "include/worldMap.h"
 
 #define mapWidth 24
 #define mapHeight 24
