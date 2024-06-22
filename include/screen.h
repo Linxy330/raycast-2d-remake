@@ -29,6 +29,7 @@ constexpr int dW = 9, dH = 9; // 字体大小
 int WIDTH = (GetSystemMetrics(SM_CXSCREEN) - dW) / dW + 1;
 int HEIGHT = (GetSystemMetrics(SM_CYSCREEN) - dH) / dH;
 
+
 class Screen {
 public:
 
@@ -128,9 +129,15 @@ private:
     }
 };
 
+//每次输出都会覆盖旧输出
 void Screen::FillScreenWithString(const char *frame) {
+    // 创建一个 COORD 结构体，表示控制台光标的位置，{0, 0} 表示将光标移动到控制台的左上角
     COORD coord = {0, 0};
+
+    // 使用 SetConsoleCursorPosition 函数将控制台光标移动到 coord 指定的位置
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+
+    // 使用 fputs 函数将 frame 指向的字符串写入标准输出（控制台）
     fputs(frame, stdout);
 }
 
