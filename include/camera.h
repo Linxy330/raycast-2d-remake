@@ -10,7 +10,7 @@ class Camera {
 public:
 
     double moveSpeed = 0.007; //移动速度
-    double rotSpeed = 0.002; //旋转速度
+    double rotSpeed = 0.003; //旋转速度
 
     Camera() {
         this->position = vec2(22, 12);
