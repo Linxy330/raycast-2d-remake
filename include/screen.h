@@ -12,9 +12,6 @@ int HEIGHT = (GetSystemMetrics(SM_CYSCREEN) - dH) / dH;
 
 struct CHAR_INFO_BUFFER {
     CHAR_INFO *buffer;//包含一个字符和其属性（颜色等）
-    COORD size;//有两个short类型，表示字符缓冲区的尺寸（宽度和高度）
-    COORD coord;//表示缓冲区的坐标
-    SMALL_RECT rect;//包含四个short类型，表示矩形区域的边界。
 };
 
 class Screen {
@@ -94,9 +91,9 @@ public:
             charInfoBuffer.buffer[WIDTH * (HEIGHT - 1) + j].Attributes = WHITE;
         }
 
-        COORD bufferSize = {(short) WIDTH, (short) HEIGHT};
-        COORD bufferCoord = {0, 0};
-        SMALL_RECT writeRegion = {0, 0, (short) (WIDTH - 1), (short) (HEIGHT - 1)};
+        COORD bufferSize = {(short) WIDTH, (short) HEIGHT};//缓冲区的宽度和高度
+        COORD bufferCoord = {0, 0};//绘制起点坐标
+        SMALL_RECT writeRegion = {0, 0, (short) (WIDTH - 1), (short) (HEIGHT - 1)};//要写入的区域
         WriteConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE), charInfoBuffer.buffer, bufferSize, bufferCoord,
                            &writeRegion);
     }
@@ -121,9 +118,6 @@ private:
     void Setup();
 
     void initCharInfoBuffer() {
-        charInfoBuffer.size = {(short) WIDTH, (short) HEIGHT};
-        charInfoBuffer.coord = {0, 0};
-        charInfoBuffer.rect = {0, 0, (short) (WIDTH - 1), (short) (HEIGHT - 1)};
         charInfoBuffer.buffer = new CHAR_INFO[WIDTH * HEIGHT];
         for (int i = 0; i < WIDTH * HEIGHT; ++i) {
             charInfoBuffer.buffer[i].Char.AsciiChar = ' ';
