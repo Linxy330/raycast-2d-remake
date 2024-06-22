@@ -38,7 +38,7 @@ int main() {
     Camera camera;
     Screen screen;
 
-    while (1) {
+    while (true) {
 //        if(kbhit())//detect keyboard
 //        {
 //            int ch = getch();
